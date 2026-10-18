@@ -1,0 +1,35 @@
+﻿# Secrets and environment configuration
+.env
+.env.*
+!.env.example
+# Java / Maven build output
+backend/target/
+# Python generated files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+# IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Python virtual environments and generated files
+ml/venv/
+**/venv/
+**/.venv/
+**/__pycache__/
+*.pyc
+# Temporary and timestamped backups
+*.bak
+*.pre_gitfix_*.bak
+*.sql
+# Exclude local backup directories and copies
+ml/backup_before_feedback_fix_*/
+frontend/app_before_vendor_patch_*.js
+frontend/index_before_vendor_patch_*.html

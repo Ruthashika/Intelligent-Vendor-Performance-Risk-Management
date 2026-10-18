@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Vendor performance and delivery risk management system.">
+  <title>Intelligent Vendor Management</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="background-glow glow-one"></div>
+  <div class="background-glow glow-two"></div>
+
+  <header class="top-nav">
+    <div class="brand">
+      <div class="brand-icon">V</div>
+      <div>
+        <strong>Vendor Management</strong>
+        <span>Performance &amp; Delivery</span>
+      </div>
+    </div>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <button class="nav-item active" data-page="dashboard">Dashboard</button>
+      <button class="nav-item" data-page="vendors">Vendors</button>
+      <button class="nav-item" data-page="orders">Purchase Orders</button>
+      <button class="nav-item" data-page="performance">Performance</button>
+      <button class="nav-item" data-page="risk">Risk Predictor</button>
+      <button class="nav-item" data-page="compliance">Compliance</button>
+      <button class="nav-item" data-page="alerts">Alerts</button>
+      <button class="nav-item" data-page="feedback">Feedback</button>
+    </nav>
+
+    <div class="profile">
+      <div class="profile-circle">A</div>
+      <div class="profile-text">
+        <strong>Admin</strong>
+        <span>Procurement</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section id="dashboard" class="page active-page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">INTELLIGENT PROCUREMENT</p>
+          <h1>Vendor Performance <span>&amp; Delivery Risk</span></h1>
+          <p class="subtitle">Monitor vendors, purchase orders and delivery risk in one place.</p>
+        </div>
+        <button class="primary-button" data-page-target="orders">+ Create Purchase Order</button>
+      </div>
+
+      <div class="kpi-grid">
+        <article class="glass-card kpi-card">
+          <div class="kpi-top"><span>Total Vendors</span><b class="kpi-icon">V</b></div>
+          <strong id="totalVendors">--</strong>
+          <small>Registered vendors</small>
+        </article>
+
+        <article class="glass-card kpi-card">
+          <div class="kpi-top"><span>Purchase Orders</span><b class="kpi-icon">PO</b></div>
+          <strong id="totalPOs">--</strong>
+          <small>Total purchase orders</small>
+        </article>
+
+        <article class="glass-card kpi-card">
+          <div class="kpi-top"><span>On-Time Delivery</span><b class="kpi-icon success">âœ“</b></div>
+          <strong id="onTimeRate">--</strong>
+          <small>Historical delivery performance</small>
+        </article>
+
+        <article class="glass-card kpi-card">
+          <div class="kpi-top"><span>High Risk POs</span><b class="kpi-icon danger">!</b></div>
+          <strong id="highRiskCount">--</strong>
+          <small>Records meeting high-risk conditions</small>
+        </article>
+      </div>
+
+      <div class="two-column">
+        <article class="glass-card chart-card">
+          <div class="section-header">
+            <div>
+              <h2>Vendor Performance Analytics</h2>
+              <p>Historical delivery behaviour</p>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="performanceChart"></canvas></div>
+        </article>
+
+        <article class="glass-card risk-summary-card">
+          <div class="section-header">
+            <div>
+              <h2>Delivery Risk</h2>
+              <p>Risk distribution across purchase orders</p>
+            </div>
+          </div>
+
+          <div class="risk-ring">
+            <div><strong id="riskTotal">--</strong><span>POs</span></div>
+          </div>
+
+          <div class="risk-list">
+            <div><span class="dot low"></span>Low <b id="lowRisk">--</b></div>
+            <div><span class="dot medium"></span>Medium <b id="mediumRisk">--</b></div>
+            <div><span class="dot high"></span>High <b id="highRisk">--</b></div>
+          </div>
+        </article>
+      </div>
+
+      <article class="glass-card table-card">
+        <div class="section-header">
+          <div>
+            <h2>Recent Purchase Orders</h2>
+            <p>Latest records from the procurement database</p>
+          </div>
+          <button class="secondary-button" data-page-target="orders">View All</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO Number</th><th>Vendor</th><th>Order Date</th>
+                <th>Expected Delivery</th><th>Status</th><th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrders">
+              <tr><td colspan="6" class="empty">Loading purchase orders...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="glass-card insight-banner">
+        <div class="status-symbol">â†—</div>
+        <div>
+          <p class="eyebrow">DELIVERY INSIGHT</p>
+          <h2>Identify delivery risk before it becomes an operational problem.</h2>
+          <p>The prediction service uses vendor history, fulfillment behaviour, delivery patterns and quality-related features.</p>
+        </div>
+        <button class="primary-button" data-page-target="risk">Open Predictor</button>
+      </article>
+    </section>
+
+    <section id="vendors" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">VENDOR DIRECTORY</p>
+          <h1>Vendor <span>Management</span></h1>
+          <p class="subtitle">View and monitor registered suppliers.</p>
+        </div>
+      </div>
+
+      <div class="toolbar glass-card vendor-toolbar">
+        <input id="vendorSearch" class="search-input" placeholder="Search vendor name, category or contact...">
+        <button type="button" id="addVendorButton" class="primary-button">+ Add Vendor</button>
+      </div>
+
+      <article class="glass-card table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Vendor</th><th>Category</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="vendorsTable"><tr><td colspan="6" class="empty">Loading vendors...</td></tr></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+
+    <div id="vendorModal" class="vendor-modal" hidden>
+      <div class="vendor-modal-card glass-card" role="dialog" aria-modal="true" aria-labelledby="vendorModalTitle">
+        <div class="vendor-modal-heading">
+          <h2 id="vendorModalTitle">Add Vendor</h2>
+          <button type="button" id="closeVendorModal" class="secondary-button">Close</button>
+        </div>
+        <form id="vendorForm" class="vendor-form">
+          <input type="hidden" name="vendorId">
+          <label>Vendor Name
+            <input name="vendorName" required maxlength="150">
+          </label>
+          <label>Category
+            <input name="category" maxlength="100">
+          </label>
+          <label>Contact Person
+            <input name="contactPerson" maxlength="150">
+          </label>
+          <label>Email
+            <input name="email" type="email" maxlength="200">
+          </label>
+          <label>Phone
+            <input name="phone" type="tel" maxlength="40">
+          </label>
+          <label>Status
+            <select name="status">
+              <option value="ACTIVE">Active</option>
+              <option value="ONBOARDING">Onboarding</option>
+              <option value="ON_WATCH">On Watch</option>
+              <option value="BLACKLISTED">Blacklisted</option>
+            </select>
+          </label>
+          <label class="vendor-address-field">Address
+            <textarea name="address" rows="3" maxlength="500"></textarea>
+          </label>
+          <p id="vendorFormError" role="alert" hidden></p>
+          <div class="vendor-form-actions">
+            <button type="button" id="cancelVendorForm" class="secondary-button">Cancel</button>
+            <button type="submit" id="saveVendorButton" class="primary-button">Save Vendor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <section id="orders" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">PROCUREMENT</p>
+          <h1>Purchase <span>Orders</span></h1>
+          <p class="subtitle">Track order lifecycle, delivery and fulfillment.</p>
+        </div>
+      </div>
+
+      <article class="glass-card table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO</th><th>Vendor</th><th>Order Date</th><th>Expected</th>
+                <th>Actual</th><th>Quantity</th><th>Status</th><th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"><tr><td colspan="8" class="empty">Loading purchase orders...</td></tr></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="performance" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">PERFORMANCE INTELLIGENCE</p>
+          <h1>Vendor <span>Performance</span></h1>
+          <p class="subtitle">Compare delivery, fulfillment and quality indicators.</p>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <article class="glass-card kpi-card"><span>Average Performance Score</span><strong id="avgScore">--</strong><small>Across available vendor scores</small></article>
+        <article class="glass-card kpi-card"><span>Average Fulfillment</span><strong id="avgFulfillment">--</strong><small>Delivered quantity vs ordered quantity</small></article>
+        <article class="glass-card kpi-card"><span>Average Delay</span><strong id="avgDelay">--</strong><small>Days beyond expected delivery</small></article>
+        <article class="glass-card kpi-card"><span>Quality Issue Rate</span><strong id="avgQuality">--</strong><small>Historical issue indicator</small></article>
+      </div>
+
+      <article class="glass-card chart-card">
+        <div class="section-header"><div><h2>Vendor Score Overview</h2><p>Performance scores returned by the backend</p></div></div>
+        <div class="chart-box"><canvas id="vendorScoreChart"></canvas></div>
+      </article>
+    </section>
+
+    <section id="risk" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">MACHINE LEARNING</p>
+          <h1>Delivery <span>Risk Predictor</span></h1>
+          <p class="subtitle">Predict Low, Medium or High delivery risk for a purchase order.</p>
+        </div>
+      </div>
+
+      <div class="risk-layout">
+        <article class="glass-card predictor-card">
+          <div class="section-header">
+            <div><h2>Prediction Input</h2><p>Enter the features used by the trained Random Forest model.</p></div>
+          </div>
+
+          <form id="riskForm" class="form-grid">
+            <label>Category<input name="category" value="Components" required></label>
+            <label>Priority<select name="priority"><option>LOW</option><option>MEDIUM</option><option selected>HIGH</option></select></label>
+            <label>Quantity<input name="quantity" type="number" value="100" required></label>
+            <label>Unit Price<input name="unit_price" type="number" value="500" required></label>
+            <label>Total Amount<input name="total_amount" type="number" value="50000" required></label>
+            <label>Planned Delivery Days<input name="planned_delivery_days" type="number" value="10" required></label>
+            <label>Previous PO Count<input name="previous_po_count" type="number" value="5" required></label>
+            <label>Previous On-Time Rate<input name="previous_on_time_rate" type="number" value="80" required></label>
+            <label>Previous Avg Delay<input name="previous_average_delay" type="number" step="0.1" value="1.2" required></label>
+            <label>Previous Fulfillment Rate<input name="previous_fulfillment_rate" type="number" value="98" required></label>
+            <label>Previous Quality Issue Rate<input name="previous_quality_issue_rate" type="number" value="10" required></label>
+            <label>Recent On-Time Rate<input name="recent_on_time_rate" type="number" value="75" required></label>
+            <label>Recent Avg Delay<input name="recent_average_delay" type="number" step="0.1" value="1.5" required></label>
+            <label>Recent Fulfillment Rate<input name="recent_fulfillment_rate" type="number" value="97" required></label>
+
+            <button class="primary-button full-width" type="submit">Predict Delivery Risk</button>
+          </form>
+        </article>
+
+        <article class="glass-card prediction-result" id="predictionResult">
+          <div class="result-placeholder">
+            <div class="status-symbol">?</div>
+            <h2>Awaiting Prediction</h2>
+            <p>Submit the form to send the request through Spring Boot to the Python prediction service.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="compliance" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">DOCUMENT CONTROL</p>
+          <h1>Vendor <span>Compliance</span></h1>
+          <p class="subtitle">Track supplier documents, expiry dates and compliance risks.</p>
+        </div>
+        <button type="button" class="primary-button" id="generateComplianceAlerts">
+          Generate Compliance Alerts
+        </button>
+      </div>
+      <article class="glass-card table-card">
+        <div class="section-header">
+          <div>
+            <h2>Register Compliance Document</h2>
+            <p class="form-help">Add a certificate or other vendor compliance document.</p>
+          </div>
+        </div>
+        <form id="complianceForm" class="simple-form">
+          <label>
+            Vendor
+            <select id="complianceVendor" required>
+              <option value="">Select vendor</option>
+            </select>
+          </label>
+          <label>
+            Document Name
+            <input id="complianceDocumentName" type="text" maxlength="150"
+                   placeholder="e.g. Safety Certificate" required>
+          </label>
+          <label>
+            Reference Number
+            <input id="complianceReferenceNumber" type="text" maxlength="100"
+                   placeholder="e.g. CERT-2026-001">
+          </label>
+          <label>
+            Issue Date
+            <input id="complianceIssueDate" type="date">
+          </label>
+          <label>
+            Expiry Date
+            <input id="complianceExpiryDate" type="date" required>
+          </label>
+          <label>
+            Notes
+            <textarea id="complianceNotes" rows="3"
+                      placeholder="Optional document notes"></textarea>
+          </label>
+          <button type="submit" class="primary-button" id="saveComplianceButton">
+            Save Document
+          </button>
+        </form>
+      </article>
+      <article class="glass-card table-card">
+        <div class="section-header">
+          <div>
+            <h2>Compliance Documents</h2>
+            <p class="form-help">Expiry status is calculated by the backend.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Vendor</th>
+                <th>Reference</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="complianceTable">
+              <tr><td colspan="5" class="empty">Loading compliance documents...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>    <section id="alerts" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">EARLY WARNING</p>
+          <h1>System <span>Alerts</span></h1>
+          <p class="subtitle">Delivery delays, quality problems and risk notifications.</p>
+        </div>
+      </div>
+
+      <article class="glass-card table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type</th><th>Message</th><th>Severity</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody id="alertsTable"><tr><td colspan="5" class="empty">Loading alerts...</td></tr></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="feedback" class="page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">CONTINUOUS IMPROVEMENT</p>
+          <h1>Vendor <span>Feedback</span></h1>
+          <p class="subtitle">Capture actual outcomes and supplier feedback for future analysis.</p>
+        </div>
+      </div>
+
+      <div class="two-column">
+        <article class="glass-card">
+          <h2>Submit Feedback</h2>
+          <p class="form-help">Record feedback against a vendor and purchase order.</p>
+
+          <form id="feedbackForm" class="simple-form">
+            <label>Vendor ID<input name="vendorId" type="number" required></label>
+            <label>Purchase Order ID<input name="purchaseOrderId" type="number" required></label>
+            <label>Feedback Type<select name="feedbackType"><option>DELIVERY</option><option>QUALITY</option><option>GENERAL</option></select></label>
+            <label>Rating<select name="rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
+            <label>Feedback<textarea name="feedbackText" rows="5" required></textarea></label>
+            <button class="primary-button" type="submit">Submit Feedback</button>
+          </form>
+        </article>
+
+        <article class="glass-card feedback-info">
+          <div class="status-symbol">â†»</div>
+          <h2>Prediction â†’ Outcome â†’ Review</h2>
+          <p>Compare predicted delivery risk with actual outcomes to support future vendor analysis.</p>
+          <div class="flow">
+            <span>Prediction</span><b>â†’</b><span>Actual Delivery</span><b>â†’</b><span>Feedback</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
