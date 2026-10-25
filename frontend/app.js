@@ -23,7 +23,7 @@ function escapeHtml(value) {
 
 function money(value) {
   const n = Number(value);
-  return Number.isFinite(n) ? "â‚¹" + n.toLocaleString("en-IN") : "--";
+  return Number.isFinite(n) ? "\u20B9" + n.toLocaleString("en-IN") : "--";
 }
 
 function badge(value) {
@@ -111,15 +111,54 @@ async function loadOrders() {
 
 async function loadPerformance() {
   try {
-    const data = await api("/api/vendor-performance");
-    state.performance = Array.isArray(data) ? data : [];
+    if (!state.vendors.length) {
+      const vendors = await api("/api/vendors");
+      state.vendors = Array.isArray(vendors) ? vendors : [];
+    }
+
+    const results = await Promise.all(
+      state.vendors.map(async (vendor) => {
+        try {
+          const history = await api(
+            `/api/performance/vendors/${vendor.id}/history`
+          );
+
+          if (!Array.isArray(history) || history.length === 0) {
+            return null;
+          }
+
+          const latest = [...history].sort(
+            (a, b) =>
+              new Date(b.calculatedAt || 0) -
+              new Date(a.calculatedAt || 0)
+          )[0];
+
+          return {
+            ...latest,
+            vendorId: vendor.id,
+            vendorName:
+              vendor.vendorName ||
+              vendor.name ||
+              `Vendor ${vendor.id}`
+          };
+        } catch (error) {
+          console.warn(
+            `Could not load performance history for vendor ${vendor.id}:`,
+            error.message
+          );
+          return null;
+        }
+      })
+    );
+
+    state.performance = results.filter(Boolean);
     renderPerformance();
   } catch (error) {
-    console.warn("Performance endpoint unavailable:", error);
+    console.error("Could not load vendor performance:", error);
+    state.performance = [];
     renderPerformanceFallback();
   }
 }
-
 async function loadAlerts() {
   try {
     const data = await api("/api/alerts/open");
@@ -598,7 +637,7 @@ $("riskForm").addEventListener("submit", async event => {
 
     resultBox.innerHTML = `
       <div class="prediction-main">
-        <div class="status-symbol" style="margin:auto">âœ“</div>
+        <div class="status-symbol" style="margin:auto">&#10003;</div>
         <p class="eyebrow" style="margin-top:15px">MODEL PREDICTION</p>
         <div class="prediction-risk ${riskClass}-text">${escapeHtml(risk)}</div>
         <p style="font-size:11px;color:#64748b">
@@ -687,5 +726,6 @@ async function initialise() {
 }
 
 initialise();
+
 
 
