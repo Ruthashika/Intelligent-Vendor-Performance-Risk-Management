@@ -11,7 +11,7 @@ public class MlPredictionService {
 
     public MlPredictionService() {
         this.restClient = RestClient.builder()
-                .baseUrl("http://127.0.0.1:8000")
+                .baseUrl(System.getenv().getOrDefault("ML_API_URL", "http://127.0.0.1:8001"))
                 .build();
     }
 
