@@ -224,7 +224,48 @@
         </div>
       </div>
 
-      <article class="glass-card table-card">
+      <article class="glass-card predictor-card" style="margin-bottom: 24px;">
+  <div class="section-header">
+    <div>
+      <h2>Create Purchase Order</h2>
+      <p>Enter order details to generate an automatic delivery-risk prediction.</p>
+    </div>
+  </div>
+  <form id="purchaseOrderForm" class="form-grid">
+    <label>Purchase Order Number
+      <input name="poNumber" required maxlength="100" placeholder="e.g. PO-2026-001">
+    </label>
+    <label>Vendor
+      <select name="vendorId" id="poVendor" required>
+        <option value="">Loading vendors...</option>
+      </select>
+    </label>
+    <label>Order Date
+      <input type="date" name="orderDate" id="poOrderDate" required>
+    </label>
+    <label>Expected Delivery Date
+      <input type="date" name="expectedDeliveryDate" required>
+    </label>
+    <label>Quantity
+      <input type="number" name="quantity" min="1" step="1" required>
+    </label>
+    <label>Unit Price (₹)
+      <input type="number" name="unitPrice" min="0" step="0.01" required>
+    </label>
+    <label>Priority
+      <select name="priority" required>
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+    </label>
+    <p id="poFormError" role="alert" hidden></p>
+    <div class="vendor-form-actions">
+      <button type="reset" class="secondary-button">Clear</button>
+      <button type="submit" id="savePOButton" class="primary-button">Create Purchase Order</button>
+    </div>
+  </form>
+</article><article class="glass-card table-card">
         <div class="table-wrap">
           <table>
             <thead>
@@ -494,6 +535,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
-
-

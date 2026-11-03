@@ -1,4 +1,4 @@
-﻿const API_BASE = "https://vendor-management-backend-nnpp.onrender.com";
+const API_BASE = "https://vendor-management-backend-nnpp.onrender.com";
 
 const state = {
   vendors: [],
@@ -86,6 +86,7 @@ async function loadVendors() {
   try {
     const data = await api("/api/vendors");
     state.vendors = Array.isArray(data) ? data : [];
+    populatePOVendors();
     $("totalVendors").textContent = state.vendors.length;
     renderVendors();
     renderCompliance();
@@ -109,7 +110,16 @@ async function loadOrders() {
   }
 }
 
-async function loadPerformance() {
+function populatePOVendors() {
+  const select = $("poVendor");
+  if (!select) return;
+  select.innerHTML = '<option value="">Select a vendor</option>' +
+    state.vendors.map(v => `
+      <option value="${escapeHtml(v.id)}">
+        ${escapeHtml(v.vendorName || v.name || ("Vendor " + v.id))}
+      </option>
+    `).join("");
+}async function loadPerformance() {
   try {
     if (!state.vendors.length) {
       const vendors = await api("/api/vendors");
@@ -709,7 +719,72 @@ $("vendorForm").addEventListener("submit", async e => {
     btn.textContent = id ? "Save Changes" : "Save Vendor";
   }
 });
-$("riskForm").addEventListener("submit", async event => {
+const poForm = $("purchaseOrderForm");
+if (poForm) {
+  const orderDateInput = $("poOrderDate");
+  const today = new Date();
+  const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 10);
+  if (orderDateInput) orderDateInput.value = localToday;
+  poForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = $("savePOButton");
+    const errorBox = $("poFormError");
+    const data = Object.fromEntries(new FormData(poForm).entries());
+    const vendorId = String(data.vendorId || "").trim();
+    if (errorBox) {
+      errorBox.textContent = "";
+      errorBox.hidden = true;
+    }
+    if (!vendorId) {
+      showToast("Please select a vendor.");
+      return;
+    }
+    if (!Number.isInteger(Number(data.quantity)) || Number(data.quantity) <= 0) {
+      showToast("Quantity must be a positive whole number.");
+      return;
+    }
+    if (!Number.isFinite(Number(data.unitPrice)) || Number(data.unitPrice) < 0) {
+      showToast("Please enter a valid unit price.");
+      return;
+    }
+    if (data.expectedDeliveryDate < data.orderDate) {
+      showToast("Expected delivery date cannot be before the order date.");
+      return;
+    }
+    delete data.vendorId;
+    data.quantity = Number(data.quantity);
+    data.unitPrice = Number(data.unitPrice);
+    button.disabled = true;
+    button.textContent = "Creating Order...";
+    try {
+      const created = await api(
+        `/api/purchase-orders?vendorId=${encodeURIComponent(vendorId)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }
+      );
+      poForm.reset();
+      if (orderDateInput) orderDateInput.value = localToday;
+      await loadOrders();
+      const risk = created?.predictedDeliveryRisk || "Not returned";
+      showToast(`Purchase order created successfully. Predicted risk: ${risk}`);
+    } catch (error) {
+      console.error("Creating purchase order failed:", error);
+      if (errorBox) {
+        errorBox.textContent = "Could not create purchase order: " + error.message;
+        errorBox.hidden = false;
+      } else {
+        showToast("Could not create purchase order: " + error.message);
+      }
+    } finally {
+      button.disabled = false;
+      button.textContent = "Create Purchase Order";
+    }
+  });
+}$("riskForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   const form = new FormData(event.target);
@@ -828,7 +903,3 @@ async function initialise() {
 }
 
 initialise();
-
-
-
-
