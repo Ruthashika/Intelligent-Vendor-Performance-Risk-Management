@@ -138,7 +138,7 @@
       </article>
 
       <article class="glass-card insight-banner">
-        <div class="status-symbol">â†—</div>
+        <div class="status-symbol">&mdash;</div>
         <div>
           <p class="eyebrow">DELIVERY INSIGHT</p>
           <h2>Identify delivery risk before it becomes an operational problem.</h2>
@@ -298,7 +298,7 @@
 
         <article class="glass-card prediction-result" id="predictionResult">
           <div class="result-placeholder">
-            <div class="status-symbol">?</div>
+            <div class="status-symbol">&mdash;</div>
             <h2>Awaiting Prediction</h2>
             <p>Submit the form to send the request through Spring Boot to the Python prediction service.</p>
           </div>
@@ -311,13 +311,64 @@
         <div>
           <p class="eyebrow">DOCUMENT CONTROL</p>
           <h1>Vendor <span>Compliance</span></h1>
+
           <p class="subtitle">Track supplier documents, expiry dates and compliance risks.</p>
         </div>
         <button type="button" class="primary-button" id="generateComplianceAlerts">
           Generate Compliance Alerts
         </button>
       </div>
-      <article class="glass-card table-card">
+<div class="compliance-assessment">
+  <div class="compliance-kpi-grid">
+    <div class="compliance-kpi">
+      <span>Vendors Assessed</span>
+      <strong id="compVendors">0</strong>
+    </div>
+    <div class="compliance-kpi">
+      <span>Fully Compliant</span>
+      <strong id="compCompliant">0</strong>
+    </div>
+    <div class="compliance-kpi">
+      <span>Need Attention</span>
+      <strong id="compAttention">0</strong>
+    </div>
+    <div class="compliance-kpi">
+      <span>Average Compliance</span>
+      <strong id="compAverage">0%</strong>
+    </div>
+  </div>
+  <article class="glass-card table-card compliance-assessment-card">
+    <div class="section-header">
+      <div>
+        <h2>Vendor Compliance Assessment</h2>
+        <p class="form-help">Automatic assessment of required vendor documents.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Compliance Score</th>
+            <th>Valid</th>
+            <th>Expired</th>
+            <th>Missing</th>
+            <th>Attention Required</th>
+            <th>Overall Status</th>
+          </tr>
+        </thead>
+        <tbody id="complianceAssessmentTable">
+          <tr><td colspan="7" class="empty">Loading assessment...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="form-help compliance-note">
+      Baseline assessment: GST Certificate, PAN and Business Registration.
+      Confirm requirements against your organization's procurement policy.
+    </p>
+  </article>
+</div>
+<article class="glass-card table-card">
         <div class="section-header">
           <div>
             <h2>Register Compliance Document</h2>
@@ -427,7 +478,7 @@
         </article>
 
         <article class="glass-card feedback-info">
-          <div class="status-symbol">&#8635;</div>
+          <div class="status-symbol">&mdash;</div>
           <h2>Prediction &rarr; Outcome &rarr; Review</h2>
           <p>Compare predicted delivery risk with actual outcomes to support future vendor analysis.</p>
           <div class="flow">
@@ -443,4 +494,6 @@
   <script src="app.js"></script>
 </body>
 </html>
+
+
 

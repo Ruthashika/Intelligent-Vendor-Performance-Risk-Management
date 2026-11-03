@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080";
+﻿const API_BASE = "http://localhost:8080";
 
 const state = {
   vendors: [],
@@ -185,35 +185,137 @@ async function loadCompliance() {
     }
   }
 }
-function renderCompliance() {
+function getVendorComplianceAssessment(vendor) {
+  const requirements = [
+    { name: "GST Certificate", aliases: ["gst", "gstin"] },
+    { name: "PAN", aliases: ["pan", "pan card"] },
+    { name: "Business Registration", aliases: ["business registration", "registration certificate", "certificate of incorporation"] }
+  ];
+  const vendorId = String(vendor.id);
+  const documents = state.compliance.filter(doc =>
+    String(doc.vendor?.id ?? doc.vendorId ?? "") === vendorId
+  );
+  const results = requirements.map(requirement => {
+    const matching = documents.filter(doc => {
+      const name = String(doc.documentName || "").toLowerCase().trim();
+      return requirement.aliases.some(alias =>
+        name === alias || name.includes(alias)
+      );
+    });
+    if (!matching.length) {
+      return { name: requirement.name, status: "MISSING" };
+    }
+    const document = matching.sort((a, b) =>
+      String(b.expiryDate || "").localeCompare(String(a.expiryDate || ""))
+    )[0];
+    if (!document.expiryDate) {
+      return { name: requirement.name, status: "DATE MISSING" };
+    }
+    const parts = document.expiryDate.split("-").map(Number);
+    const expiry = new Date(parts[0], parts[1] - 1, parts[2]);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((expiry - today) / 86400000);
+    if (daysLeft < 0) {
+      return { name: requirement.name, status: "EXPIRED" };
+    }
+    if (daysLeft <= 30) {
+      return { name: requirement.name, status: "EXPIRING" };
+    }
+    return { name: requirement.name, status: "VALID" };
+  });
+  const valid = results.filter(x => x.status === "VALID").length;
+  const expired = results.filter(x => x.status === "EXPIRED").length;
+  const missing = results.filter(x => x.status === "MISSING").length;
+  const expiring = results.filter(x =>
+    x.status === "EXPIRING" || x.status === "DATE MISSING"
+  ).length;
+  const score = Math.round((valid / requirements.length) * 100);
+  let status = "NON-COMPLIANT";
+  if (valid === requirements.length) status = "COMPLIANT";
+  else if (valid > 0) status = "PARTIALLY COMPLIANT";
+  return {
+    vendorName: vendor.vendorName || vendor.name || ("Vendor " + vendor.id),
+    score,
+    valid,
+    expired,
+    missing,
+    expiring,
+    status,
+    issues: results
+      .filter(x => x.status !== "VALID")
+      .map(x => x.name + ": " + x.status)
+  };
+}
+function renderComplianceAssessment() {
+  const tbody = $("complianceAssessmentTable");
+  if (!tbody) return;
+  const assessments = state.vendors.map(getVendorComplianceAssessment);
+  const compliant = assessments.filter(x => x.status === "COMPLIANT").length;
+  const attention = assessments.length - compliant;
+  const average = assessments.length
+    ? Math.round(assessments.reduce((sum, x) => sum + x.score, 0) / assessments.length)
+    : 0;
+  if ($("compVendors")) $("compVendors").textContent = assessments.length;
+  if ($("compCompliant")) $("compCompliant").textContent = compliant;
+  if ($("compAttention")) $("compAttention").textContent = attention;
+  if ($("compAverage")) $("compAverage").textContent = average + "%";
+  if (!assessments.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No vendors available.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = assessments.map(item => {
+    const statusClass = item.status === "COMPLIANT"
+      ? "success"
+      : item.status === "PARTIALLY COMPLIANT" ? "warning" : "danger";
+    const issues = item.issues.length
+      ? item.issues.map(x => escapeHtml(x)).join("<br>")
+      : "No outstanding issues";
+    return `
+      <tr>
+        <td><strong>${escapeHtml(item.vendorName)}</strong></td>
+        <td>
+          <strong>${item.score}%</strong>
+          <div class="compliance-progress">
+            <span style="width:${item.score}%"></span>
+          </div>
+        </td>
+        <td>${item.valid}/3</td>
+        <td>${item.expired}</td>
+        <td>${item.missing}</td>
+        <td class="compliance-issues">${issues}</td>
+        <td><span class="compliance-status ${statusClass}">${item.status}</span></td>
+      </tr>
+    `;
+  }).join("");
+}function renderCompliance() {
   const vendorSelect = $("complianceVendor");
-  const tbody = $("complianceTable");
   if (vendorSelect) {
     const selectedVendor = vendorSelect.value;
     vendorSelect.innerHTML =
       '<option value="">Select vendor</option>' +
       state.vendors.map(v =>
-        `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name || v.vendorName || ("Vendor " + v.id))}</option>`
+        `<option value="${v.id}">${escapeHtml(v.vendorName || v.name || ("Vendor " + v.id))}</option>`
       ).join("");
-    if (state.vendors.some(v => String(v.id) === selectedVendor)) {
-      vendorSelect.value = selectedVendor;
+    vendorSelect.value = selectedVendor;
+  }
+  const tbody = $("complianceTable");
+  if (tbody) {
+    if (!state.compliance.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">No compliance documents registered yet.</td></tr>';
+    } else {
+      tbody.innerHTML = [...state.compliance].reverse().map(doc => `
+        <tr>
+          <td>${escapeHtml(doc.documentName || "--")}</td>
+          <td>${escapeHtml(doc.vendor?.vendorName || doc.vendor?.name || ("Vendor " + (doc.vendor?.id ?? "--")))}</td>
+          <td>${escapeHtml(doc.referenceNumber || "--")}</td>
+          <td>${escapeHtml(doc.expiryDate || "--")}</td>
+          <td>${badge(doc.complianceStatus || "UNKNOWN")}</td>
+        </tr>
+      `).join("");
     }
   }
-  if (!tbody) return;
-  if (!state.compliance.length) {
-    tbody.innerHTML =
-      '<tr><td colspan="5" class="empty">No compliance documents registered yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = [...state.compliance].reverse().map(doc => `
-    <tr>
-      <td>${escapeHtml(doc.documentName || "--")}</td>
-      <td>${escapeHtml(doc.vendor?.name || doc.vendor?.vendorName || ("Vendor " + (doc.vendor?.id ?? "--")))}</td>
-      <td>${escapeHtml(doc.referenceNumber || "--")}</td>
-      <td>${escapeHtml(doc.expiryDate || "--")}</td>
-      <td>${badge(doc.complianceStatus || "UNKNOWN")}</td>
-    </tr>
-  `).join("");
+  renderComplianceAssessment();
 }
 $("complianceForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -726,6 +828,7 @@ async function initialise() {
 }
 
 initialise();
+
 
 
 
